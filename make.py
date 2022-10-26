@@ -220,7 +220,7 @@ def make():
         " && make -r -w -j" + str(cpus) +
         " && make bindist INSTALL_ROOT="+installdir):
             sys.exit("Make Failed...")
-        installer = glob.glob(os.path.join(builddir, "openmv-ide-*.tar.gz"))[0]
+        installer = glob.glob(os.path.join(builddir, "canmv-ide-*.tar.gz"))[0]
 
     elif sys.platform.startswith('win'):
         if os.system("cd " + builddir +
@@ -228,7 +228,7 @@ def make():
         " && jom -j" + str(cpus) +
         " && jom installer INSTALL_ROOT="+installdir + " IFW_PATH="+ifdir):
             sys.exit("Make Failed...")
-        installer = glob.glob(os.path.join(builddir, "openmv-ide-*.exe"))[0]
+        installer = glob.glob(os.path.join(builddir, "canmv-ide-*.exe"))[0]
 
     elif sys.platform.startswith('darwin'):
         if os.system("cd " + builddir +
@@ -238,13 +238,13 @@ def make():
             sys.exit("Make Failed...")
         os.system("cd " + builddir + " && make codesign SIGNING_IDENTITY=Application SIGNING_FLAGS=\"--force --options=runtime --timestamp\"")
         if os.system("cd " + builddir +
-        " && ditto -c -k -rsrc --sequesterRsrc --keepParent bin/OpenMV\\ IDE.app OpenMV\\ IDE.zip"
-        " && xcrun notarytool submit OpenMV\\ IDE.zip --keychain-profile \"AC_PASSWORD\" --wait"
-        " && xcrun stapler staple bin/OpenMV\\ IDE.app"):
+        " && ditto -c -k -rsrc --sequesterRsrc --keepParent bin/CanMV\\ IDE.app CanMV\\ IDE.zip"
+        " && xcrun notarytool submit CanMV\\ IDE.zip --keychain-profile \"AC_PASSWORD\" --wait"
+        " && xcrun stapler staple bin/CanMV\\ IDE.app"):
             sys.exit("Make Failed...")
         if os.system("cd " + builddir + " && make dmg"):
             sys.exit("Make Failed...")
-        installer = glob.glob(os.path.join(builddir, "openmv-ide-*.dmg"))[0]
+        installer = glob.glob(os.path.join(builddir, "canmv-ide-*.dmg"))[0]
         if os.system("cd " + builddir + " && xcrun notarytool submit " + installer + " --keychain-profile \"AC_PASSWORD\" --wait"
         " && xcrun stapler staple " + installer):
             sys.exit("Make Failed...")
@@ -257,9 +257,9 @@ def make():
                         os.path.join(installdir, "lib/Qt/lib/fonts"))
         # Add README.txt...
         with open(os.path.join(installdir, "README.txt"), 'w') as f:
-            f.write("Please run setup.sh to install OpenMV IDE dependencies... e.g.\n\n")
+            f.write("Please run setup.sh to install CanMV IDE dependencies... e.g.\n\n")
             f.write("./setup.sh\n\n")
-            f.write("./bin/openmvide.sh\n\n")
+            f.write("./bin/canmv.sh\n\n")
         # Add setup.sh...
         with open(os.path.join(installdir, "setup.sh"), 'w') as f:
             f.write("#! /bin/sh\n\n")
@@ -275,7 +275,7 @@ def make():
         " && make -r -w -j" + str(cpus) +
         " && make installer INSTALL_ROOT="+installdir + " IFW_PATH="+str(ifdir)):
             sys.exit("Make Failed...")
-        installer = glob.glob(os.path.join(builddir, "openmv-ide-*.run"))[0]
+        installer = glob.glob(os.path.join(builddir, "canmv-ide-*.run"))[0]
 
     else:
         sys.exit("Unknown Platform")
