@@ -1,3 +1,7 @@
+# CanMV-ide
+
+CanMV-ide is fork from openmv-ide.
+
 # openmv-ide #
 Qt Creator based OpenMV IDE
 
