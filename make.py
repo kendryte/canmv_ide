@@ -2,7 +2,7 @@
 
 # by: Kwabena W. Agyeman - kwagyeman@openmv.io
 
-import argparse, glob, multiprocessing, os, re, shutil, stat, sys, subprocess
+import argparse, glob, multiprocessing, os, re, shutil, stat, sys, subprocess, errno
 
 def match(d0, d1):
     x = [x for x in os.listdir(d0) if re.match(d1, x)]
@@ -111,6 +111,56 @@ def find_ifdir():
                 return ifdir
     return None
 
+def run_command(commands, args, cwd=None, verbose=False, hide_stderr=False,
+                env=None):
+    """Call the given command(s)."""
+    assert isinstance(commands, list)
+    p = None
+    for c in commands:
+        try:
+            dispcmd = str([c] + args)
+            # remember shell=False, so use git.cmd on windows, not just git
+            p = subprocess.Popen([c] + args, cwd=cwd, env=env,
+                                 stdout=subprocess.PIPE,
+                                 stderr=(subprocess.PIPE if hide_stderr
+                                         else None))
+            break
+        except EnvironmentError:
+            e = sys.exc_info()[1]
+            if e.errno == errno.ENOENT:
+                continue
+            if verbose:
+                print("unable to run %s" % dispcmd)
+                print(e)
+            return None, None
+    else:
+        if verbose:
+            print("unable to find command, tried %s" % (commands,))
+        return None, None
+    stdout = p.communicate()[0].strip()
+    if sys.version_info[0] >= 3:
+        stdout = stdout.decode()
+    if p.returncode != 0:
+        if verbose:
+            print("unable to run %s (error)" % dispcmd)
+            print("stdout was %s" % stdout)
+        return None, p.returncode
+    return stdout, p.returncode
+
+def generate_git_rev():
+    GITS = ["git"]
+    if sys.platform == "win32":
+        GITS = ["git.cmd", "git.exe"]
+
+    describe_out, rc = run_command(GITS, ["describe", "--tags", "--dirty",
+                                          "--always", "--long",
+                                        ]
+                                   )
+    # --long was added in git-1.5.5
+    if describe_out is None:
+        return "debug"
+    return describe_out
+
 def make():
 
     __folder__ = os.path.dirname(os.path.abspath(__file__))
@@ -130,6 +180,9 @@ def make():
         sys.exit("Linux Only")
 
     ###########################################################################
+    git_version = generate_git_rev()
+
+    print("git_version:" + git_version)
 
     cpus = multiprocessing.cpu_count()
 
@@ -216,7 +269,7 @@ def make():
             os.stat(os.path.join(installdir, "setup.sh")).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         # Build...
         if os.system("cd " + builddir +
-        " && qmake ../qt-creator/qtcreator.pro -r" +
+        " && qmake ../qt-creator/qtcreator.pro -r OMV_IDE_GIT_VERSION=\"" + git_version + "\"" +
         " && make -r -w -j" + str(cpus) +
         " && make bindist INSTALL_ROOT="+installdir):
             sys.exit("Make Failed...")
@@ -224,7 +277,7 @@ def make():
 
     elif sys.platform.startswith('win'):
         if os.system("cd " + builddir +
-        " && qmake ../qt-creator/qtcreator.pro -r -spec win32-g++" +
+        " && qmake ../qt-creator/qtcreator.pro -r -spec win32-g++ OMV_IDE_GIT_VERSION=\"" + git_version + "\"" + 
         " && jom -j" + str(cpus) +
         " && jom installer INSTALL_ROOT="+installdir + " IFW_PATH="+ifdir):
             sys.exit("Make Failed...")
@@ -232,7 +285,7 @@ def make():
 
     elif sys.platform.startswith('darwin'):
         if os.system("cd " + builddir +
-        " && qmake ../qt-creator/qtcreator.pro -r -spec macx-clang CONFIG+=x86_64" +
+        " && qmake ../qt-creator/qtcreator.pro -r -spec macx-clang CONFIG+=x86_64 OMV_IDE_GIT_VERSION=\"" + git_version + "\"" + 
         " && make -j" + str(cpus) +
         " && make deployqt"):
             sys.exit("Make Failed...")
@@ -259,7 +312,7 @@ def make():
         with open(os.path.join(installdir, "README.txt"), 'w') as f:
             f.write("Please run setup.sh to install CanMV IDE dependencies... e.g.\n\n")
             f.write("./setup.sh\n\n")
-            f.write("./bin/canmv.sh\n\n")
+            f.write("./bin/canmvide.sh\n\n")
         # Add setup.sh...
         with open(os.path.join(installdir, "setup.sh"), 'w') as f:
             f.write("#! /bin/sh\n\n")
@@ -271,7 +324,7 @@ def make():
             os.stat(os.path.join(installdir, "setup.sh")).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         # Build...
         if os.system("cd " + builddir +
-        " && qmake ../qt-creator/qtcreator.pro -r -spec linux-g++" +
+        " && qmake ../qt-creator/qtcreator.pro -r -spec linux-g++ OMV_IDE_GIT_VERSION=\"" + git_version + "\"" +
         " && make -r -w -j" + str(cpus) +
         " && make installer INSTALL_ROOT="+installdir + " IFW_PATH="+str(ifdir)):
             sys.exit("Make Failed...")
