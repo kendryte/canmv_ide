@@ -4,3 +4,5 @@
 *.pyc
 Thumbs.db
 .DS_Store
+build-*
+.vscode
