@@ -1,8 +1,4 @@
-[submodule "openmv-media"]
-	path = openmv-media
-	url = https://github.com/openmv/openmv-media.git
-	branch = master
 [submodule "qt-creator"]
 	path = qt-creator
-	url = https://github.com/openmv/qt-creator.git
+	url = https://github.com/MrThanlon/qt-creator.git
 	branch = openmv-new
