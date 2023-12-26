@@ -1,4 +1,4 @@
 [submodule "qt-creator"]
 	path = qt-creator
-	url = https://github.com/MrThanlon/qt-creator.git
-	branch = openmv-new
+	url = https://github.com/kendryte/canmv_ide_qt_creator.git
+	branch = k230
