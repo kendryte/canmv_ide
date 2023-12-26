@@ -302,7 +302,7 @@ def make():
 
     ###########################################################################
 
-    qtdir = find_qtdir(args.rpi)
+    qtdir = r"C:\Qt\6.5.2\msvc2019_64" # find_qtdir(args.rpi)
     mingwdir = find_mingwdir()
     find_cmakedir()
     find_ninjadir()
@@ -381,12 +381,12 @@ def make():
                 sys.exit("Make Failed...")
 
     elif sys.platform.startswith('win'):
-        installer_name = "openmv-ide-windows-" + ideversion
+        installer_name = "canmv-ide-windows-" + ideversion
         installer_archive_name = installer_name + "-installer-archive.7z"
         if not args.no_build_application:
             if os.system("cd " + builddir +
             " && cmake ../qt-creator" +
-                " \"-DCMAKE_GENERATOR:STRING=Ninja\"" +
+                #" \"-DCMAKE_GENERATOR:STRING=Ninja\"" +
                 " \"-DCMAKE_BUILD_TYPE:STRING=Release\"" +
                 " \"-DQT_QMAKE_EXECUTABLE:FILEPATH=" + os.path.join(qtdir, "bin/qmake.exe") + "\"" +
                 " \"-DCMAKE_PREFIX_PATH:PATH=" + qtdir + "\"" +
@@ -416,7 +416,7 @@ def make():
                 sys.exit("Make Failed...")
 
     elif sys.platform.startswith('darwin'):
-        installer_name = "openmv-ide-mac-" + ideversion + ".dmg"
+        installer_name = "canmv-ide-mac-" + ideversion + ".dmg"
         if not args.no_build_application:
             if os.system("cd " + builddir +
             " && cmake ../qt-creator" +
@@ -446,7 +446,7 @@ def make():
                 sys.exit("Make Failed...")
 
     elif sys.platform.startswith('linux'):
-        installer_name = "openmv-ide-linux-x86_64-" + ideversion
+        installer_name = "canmv-ide-linux-x86_64-" + ideversion
         installer_archive_name = installer_name + "-installer-archive.7z"
         if not args.no_build_application:
             if os.system("cd " + builddir +
