@@ -177,11 +177,11 @@ jobs:
       if: matrix.map.host == 'linux'
       run: |
         sudo apt-get install -y chrpath
-        python make.py
+        #python make.py
         python make.py --no-build-installer
-        version=$(ls build | grep -oP 'openmv-ide-linux-x86_64-\K[0-9]+\.[0-9]+\.[0-9]+(?=\.run)')
-        cd qt-creator/share/qtcreator
-        zip -r ../../../build/openmv-ide-resources-${version}.zip examples firmware html models
+        #version=$(ls build | grep -oP 'openmv-ide-linux-x86_64-\K[0-9]+\.[0-9]+\.[0-9]+(?=\.run)')
+        #cd qt-creator/share/qtcreator
+        #zip -r ../../../build/openmv-ide-resources-${version}.zip examples firmware html models
 
     - name: '🏗 Build IDE on Mac'
       if: matrix.map.host == 'mac'
