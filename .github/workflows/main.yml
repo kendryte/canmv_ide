@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.map.os }}
     strategy:
       matrix:
-        map: [{os: ubuntu-20.04, host: linux, suffix: run}]
+        map: [{os: ubuntu-20.04, host: linux, suffix: tar.gz}]
       fail-fast: false
     steps:
     - name: '⏳ Checkout repository'
@@ -196,20 +196,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         path: 'build/openmv-ide-*.${{ matrix.map.suffix }}'
-        if-no-files-found: error
-
-    - name: '⬆ Upload resources (1/2)'
-      if: github.event_name != 'pull_request' && matrix.map.host == 'linux'
-      uses: actions/upload-artifact@v3
-      with:
-        path: 'build/openmv-ide-*.tar.gz'
-        if-no-files-found: error
-  
-    - name: '⬆ Upload resources (2/2)'
-      if: github.event_name != 'pull_request' && matrix.map.host == 'linux'
-      uses: actions/upload-artifact@v3
-      with:
-        path: 'build/openmv-ide-*.zip'
         if-no-files-found: error
 
     - name: '❖ Remove Windows Certificates'
