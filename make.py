@@ -543,7 +543,7 @@ def make():
                 f.write("Please run setup.sh to install CanMV IDE dependencies:\n\n")
                 f.write("    ./setup.sh\n\n")
                 f.write("And then run CanMV IDE:\n\n")
-                f.write("    ./bin/openmvide\n")
+                f.write("    ./bin/canmvide\n")
             with open(os.path.join(installdir, "setup.sh"), 'w') as f:
                 f.write("#! /bin/sh\n\n")
                 f.write("DIR=\"$(dirname \"$(readlink -f \"$0\")\")\"\n\n")
@@ -557,28 +557,28 @@ def make():
                 f.write("sudo cp -r \"$DIR/share/icons\" /usr/share/\n")
                 f.write("rm -rf \"$DIR/share/icons\"\n")
                 f.write("sudo gtk-update-icon-cache\n\n")
-                f.write("cat > \"/home/$USER/Desktop/openmvide.desktop\" << EOM\n")
+                f.write("cat > \"/home/$USER/Desktop/canmvide.desktop\" << EOM\n")
                 f.write("[Desktop Entry]\n")
                 f.write("Type=Application\n")
                 f.write("Name=CanMV IDE\n")
                 f.write("GenericName=CanMV IDE\n")
                 f.write("Comment=The IDE of choice for CanMV Cam Development.\n")
-                f.write("Exec=\"$DIR/bin/openmvide\" %F\n")
+                f.write("Exec=\"$DIR/bin/canmvide\" %F\n")
                 f.write("Icon=CanMV-canmvide\n")
                 f.write("Terminal=false\n")
                 f.write("Categories=Development;IDE;Electronics;CanMV;\n")
                 f.write("MimeType=text/x-python;\n")
                 f.write("Keywords=embedded electronics;electronics;microcontroller;micropython;computer vision;machine vision;\n")
-                f.write("StartupWMClass=openmvide\n")
+                f.write("StartupWMClass=canmvide\n")
                 f.write("EOM\n")
-                f.write("cp \"/home/$USER/Desktop/openmvide.desktop\"  \"/home/$USER/.local/share/applications/\"\n")
-                f.write("sudo cp \"/home/$USER/Desktop/openmvide.desktop\" /usr/share/applications/\n")
+                f.write("cp \"/home/$USER/Desktop/canmvide.desktop\"  \"/home/$USER/.local/share/applications/\"\n")
+                f.write("sudo cp \"/home/$USER/Desktop/canmvide.desktop\" /usr/share/applications/\n")
             os.chmod(os.path.join(installdir, "setup.sh"),
                 os.stat(os.path.join(installdir, "setup.sh")).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             if os.system("cd " + builddir +
-            " && rm -rf openmv-ide"
-            " && cp -r install openmv-ide"
-            " && tar -czvf " + installer_name + ".tar.gz openmv-ide"):
+            " && rm -rf canmvide-ide"
+            " && cp -r install canmvide-ide"
+            " && tar -czvf " + installer_name + ".tar.gz canmvide-ide"):
                 sys.exit("Make Failed...")
 
     else:
