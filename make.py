@@ -497,15 +497,15 @@ def make():
                 sys.exit("Make Failed...")
         if not args.no_sign_application:
             if os.system("cd " + builddir +
-            " && python3 -u ../qt-creator/scripts/sign.py \"OpenMV IDE.app\" || true" +
-            " && codesign --deep -s Application --force --options=runtime --timestamp \"OpenMV IDE.app\" || true" +
-            " && ditto -c -k -rsrc --sequesterRsrc --keepParent OpenMV\\ IDE.app OpenMV\\ IDE.zip" +
-            " && xcrun notarytool submit OpenMV\\ IDE.zip --keychain-profile \"AC_PASSWORD\" --wait || true" +
-            " && xcrun stapler staple OpenMV\\ IDE.app || true"):
+            " && python3 -u ../qt-creator/scripts/sign.py \"CanMV IDE K230.app\" || true" +
+            " && codesign --deep -s Application --force --options=runtime --timestamp \"CanMV IDE K230.app\" || true" +
+            " && ditto -c -k -rsrc --sequesterRsrc --keepParent CanMV\\ IDE\\ K230.app CanMV\\ IDE\\ K230.zip" +
+            " && xcrun notarytool submit CanMV\\ IDE\\ K230.zip --keychain-profile \"AC_PASSWORD\" --wait || true" +
+            " && xcrun stapler staple CanMV\\ IDE\\ K230.app || true"):
                 sys.exit("Make Failed...")
         if not args.no_build_installer:
             if os.system("cd " + builddir +
-            " && ../qt-creator/scripts/makedmg.sh OpenMV\\ IDE.app " + installer_name):
+            " && ../qt-creator/scripts/makedmg.sh CanMV\\ IDE\\ K230.app " + installer_name):
                 sys.exit("Make Failed...")
         if not args.no_sign_installer:
             if os.system("cd " + builddir +
