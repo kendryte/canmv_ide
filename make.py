@@ -2,7 +2,9 @@
 
 # by: Kwabena W. Agyeman - kwagyeman@openmv.io
 
-import argparse, os, re, stat, sys
+import argparse, os, re, stat, sys, subprocess
+
+from pathlib import Path
 
 def match(d0, d1):
     x = [x for x in os.listdir(d0) if re.match(d1, x)]
@@ -18,6 +20,72 @@ def search(d0, d1):
 def search_all(d0, d1):
     return [os.path.join(d0, x) for x in os.listdir(d0) if re.search(d1, x)]
 
+def get_qt_base_dir():
+    """
+    Get Qt installation base directory from qmake in system PATH.
+    Returns Path object or None if not found.
+    """
+    # Determine qmake executable name based on platform
+    qmake_exe = 'qmake.exe' if sys.platform.startswith('win') else 'qmake'
+
+    try:
+        # Step 1: Get qmake path
+        qmake_path = None
+        
+        # Method 1: Try 'which' or 'where' command
+        try:
+            cmd = ['where', qmake_exe] if sys.platform.startswith('win') else ['which', qmake_exe]
+            qmake_path = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        # Method 2: Try direct execution if first method failed
+        if not qmake_path:
+            try:
+                qmake_path = subprocess.check_output([qmake_exe, '-query', 'QT_INSTALL_PREFIX'], 
+                                                   stderr=subprocess.DEVNULL).decode().strip()
+                return Path(qmake_path)
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                pass
+
+        # If we got path from which/where but not from -query
+        if qmake_path and not qmake_path.startswith('QT_INSTALL_PREFIX:'):
+            qmake_path = Path(qmake_path).resolve()
+            
+            # Step 2: Derive Qt base directory from qmake path
+            if sys.platform.startswith('win'):
+                # Windows: Typically in <QtDir>\<version>\<compiler>\bin\qmake.exe
+                qt_base = qmake_path.parent.parent.parent.parent
+            else:
+                # Unix-like: Typically in <QtDir>/<version>/gcc_64/bin/qmake
+                qt_base = qmake_path.parent.parent.parent.parent
+
+            # Verify it's a Qt directory
+            if (qt_base / 'bin').exists() and (qt_base / 'lib').exists():
+                return qt_base
+
+            # Alternative verification
+            try:
+                version_info = subprocess.check_output([str(qmake_path), '-v'], 
+                                                     stderr=subprocess.DEVNULL).decode()
+                if 'Qt version' in version_info:
+                    return qt_base
+            except subprocess.CalledProcessError:
+                pass
+
+        # Step 3: Try querying Qt installation directly
+        try:
+            qt_prefix = subprocess.check_output([qmake_exe, '-query', 'QT_INSTALL_PREFIX'], 
+                                              stderr=subprocess.DEVNULL).decode().strip()
+            return Path(qt_prefix)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+    except Exception as e:
+        print(f"Error while locating Qt: {e}", file=sys.stderr)
+
+    return None
+
 def find_qtdir(rpi):
     if rpi:
         os.environ["QTDIR"] = rpi
@@ -25,7 +93,7 @@ def find_qtdir(rpi):
         os.environ["PATH"] = path + os.environ["PATH"]
         return rpi
     elif sys.platform.startswith('win'):
-        qtdir = match(os.sep, r"Qt")
+        qtdir = get_qt_base_dir() # match(os.sep, r"Qt")
         if qtdir:
             qtdir = match(qtdir, r"\d+\.\d+(\.\d+)?")
             if qtdir:
@@ -46,7 +114,7 @@ def find_qtdir(rpi):
                     os.environ["PATH"] = os.environ["PATH"] + path
                     return qtdir
     elif sys.platform.startswith('darwin'):
-        qtdir = match(os.path.expanduser('~'), r"Qt")
+        qtdir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if qtdir:
             qtdir = match(qtdir, r"\d+\.\d+(\.\d+)?")
             if qtdir:
@@ -57,7 +125,7 @@ def find_qtdir(rpi):
                     os.environ["PATH"] = os.environ["PATH"] + path
                     return qtdir
     elif sys.platform.startswith('linux'):
-        qtdir = match(os.path.expanduser('~'), r"Qt")
+        qtdir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if qtdir:
             qtdir = match(qtdir, r"\d+\.\d+(\.\d+)?")
             if qtdir:
@@ -71,7 +139,7 @@ def find_qtdir(rpi):
 
 def find_mingwdir():
     if sys.platform.startswith('win'):
-        mingwdir = match(os.sep, r"Qt")
+        mingwdir = get_qt_base_dir() # match(os.sep, r"Qt")
         if mingwdir:
             mingwdir = match(mingwdir, r"Tools")
             if mingwdir:
@@ -81,7 +149,7 @@ def find_mingwdir():
                     path = ';' + os.path.join(mingwdir, "bin")
                     os.environ["PATH"] = os.environ["PATH"] + path
                     return mingwdir
-        mingwdir = match(os.path.expanduser('~'), r"Qt")
+        mingwdir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if mingwdir:
             mingwdir = match(mingwdir, r"Tools")
             if mingwdir:
@@ -95,7 +163,7 @@ def find_mingwdir():
 
 def find_cmakedir():
     if sys.platform.startswith('win'):
-        cmakedir = match(os.sep, r"Qt")
+        cmakedir = get_qt_base_dir() # match(os.sep, r"Qt")
         if cmakedir:
             cmakedir = match(cmakedir, r"Tools")
             if cmakedir:
@@ -116,7 +184,7 @@ def find_cmakedir():
                     os.environ["PATH"] = os.environ["PATH"] + path
                     return cmakedir
     elif sys.platform.startswith('darwin'):
-        cmakedir = match(os.path.expanduser('~'), r"Qt")
+        cmakedir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if cmakedir:
             cmakedir = match(cmakedir, r"Tools")
             if cmakedir:
@@ -131,7 +199,7 @@ def find_cmakedir():
                             os.environ["PATH"] = os.environ["PATH"] + path
                             return cmakedir
     elif sys.platform.startswith('linux'):
-        cmakedir = match(os.path.expanduser('~'), r"Qt")
+        cmakedir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if cmakedir:
             cmakedir = match(cmakedir, r"Tools")
             if cmakedir:
@@ -145,7 +213,7 @@ def find_cmakedir():
 
 def find_ninjadir():
     if sys.platform.startswith('win'):
-        ninjadir = match(os.sep, r"Qt")
+        ninjadir = get_qt_base_dir() # match(os.sep, r"Qt")
         if ninjadir:
             ninjadir = match(ninjadir, r"Tools")
             if ninjadir:
@@ -166,7 +234,7 @@ def find_ninjadir():
                     os.environ["PATH"] = os.environ["PATH"] + path
                     return ninjadir
     elif sys.platform.startswith('darwin'):
-        ninjadir = match(os.path.expanduser('~'), r"Qt")
+        ninjadir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if ninjadir:
             ninjadir = match(ninjadir, r"Tools")
             if ninjadir:
@@ -177,7 +245,7 @@ def find_ninjadir():
                     os.environ["PATH"] = os.environ["PATH"] + path
                     return ninjadir
     elif sys.platform.startswith('linux'):
-        ninjadir = match(os.path.expanduser('~'), r"Qt")
+        ninjadir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if ninjadir:
             ninjadir = match(ninjadir, r"Tools")
             if ninjadir:
@@ -191,7 +259,7 @@ def find_ninjadir():
 
 def find_ifdir():
     if sys.platform.startswith('win'):
-        ifdir = match(os.sep, r"Qt")
+        ifdir = get_qt_base_dir() # match(os.sep, r"Qt")
         if ifdir:
             ifdir = match(ifdir, r"Tools")
             if ifdir:
@@ -216,7 +284,7 @@ def find_ifdir():
                         os.environ["PATH"] = os.environ["PATH"] + path
                         return ifdir
     elif sys.platform.startswith('darwin'):
-        ifdir = match(os.path.expanduser('~'), r"Qt")
+        ifdir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if ifdir:
             ifdir = search(ifdir, r"QtIFW")
             if ifdir:
@@ -225,7 +293,7 @@ def find_ifdir():
                 os.environ["PATH"] = os.environ["PATH"] + path
                 return ifdir
     elif sys.platform.startswith('linux'):
-        ifdir = match(os.path.expanduser('~'), r"Qt")
+        ifdir = get_qt_base_dir() # match(os.path.expanduser('~'), r"Qt")
         if ifdir:
             ifdir = match(ifdir, r"Tools")
             if ifdir:
@@ -277,8 +345,7 @@ def make():
 
     __folder__ = os.path.dirname(os.path.abspath(__file__))
 
-    parser = argparse.ArgumentParser(description =
-    "Make Script")
+    parser = argparse.ArgumentParser(description = "Make Script")
 
     parser.add_argument("--rpi", nargs = '?',
     help = "Qt 6 Cross-Compile QTDIR for the Raspberry Pi")
@@ -301,8 +368,7 @@ def make():
         sys.exit("Linux Only")
 
     ###########################################################################
-
-    qtdir = r"C:\Qt\6.5.2\msvc2019_64" # find_qtdir(args.rpi)
+    qtdir = find_qtdir(args.rpi)
     mingwdir = find_mingwdir()
     find_cmakedir()
     find_ninjadir()
@@ -386,13 +452,14 @@ def make():
         if not args.no_build_application:
             if os.system("cd " + builddir +
             " && cmake ../qt-creator" +
-                #" \"-DCMAKE_GENERATOR:STRING=Ninja\"" +
+                " \"-DCMAKE_GENERATOR:STRING=Ninja\"" +
                 " \"-DCMAKE_BUILD_TYPE:STRING=Release\"" +
                 " \"-DQT_QMAKE_EXECUTABLE:FILEPATH=" + os.path.join(qtdir, "bin/qmake.exe") + "\"" +
                 " \"-DCMAKE_PREFIX_PATH:PATH=" + qtdir + "\"" +
                 " \"-DCMAKE_C_COMPILER:FILEPATH=" + os.path.join(mingwdir, "bin/gcc.exe") + "\"" +
                 " \"-DCMAKE_CXX_COMPILER:FILEPATH=" + os.path.join(mingwdir, "bin/g++.exe") + "\"" +
-                " \"-DCMAKE_CXX_FLAGS_INIT:STRING=\""
+                " \"-DCMAKE_CXX_FLAGS_INIT:STRING=\"" +
+                " \"-DCMAKE_EXPORT_COMPILE_COMMANDS=ON\""
             " && cmake --build . --target all" +
             " && cmake --install . --prefix install" +
             " && cmake --install . --prefix install --component Dependencies"):
@@ -424,6 +491,7 @@ def make():
                 " \"-DCMAKE_BUILD_TYPE:STRING=Release\"" +
                 " \"-DCMAKE_PREFIX_PATH:PATH=" + qtdir + "\"" +
                 " \"-DCMAKE_CXX_FLAGS_INIT:STRING=\""
+                " \"-DCMAKE_EXPORT_COMPILE_COMMANDS=ON\""
             " && cmake --build . --target all" +
             " && cmake --install . --prefix . --component Dependencies"):
                 sys.exit("Make Failed...")
@@ -456,6 +524,7 @@ def make():
                 " \"-DCMAKE_BUILD_TYPE:STRING=Release\"" +
                 " \"-DCMAKE_PREFIX_PATH:PATH=" + qtdir + "\"" +
                 " \"-DCMAKE_CXX_FLAGS_INIT:STRING=\"" +
+                " \"-DCMAKE_EXPORT_COMPILE_COMMANDS=ON\""
             " && cmake --build . --target all" +
             " && cmake --install . --prefix install" +
             " && cmake --install . --prefix install --component Dependencies"):
